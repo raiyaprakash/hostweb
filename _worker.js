@@ -6,7 +6,7 @@ export default {
     // Construct the source URL from the request
     const source = new URL(request.url);
 
-    // Check if the request is for main.js
+    // Check if the request is for push-sw.js
     if (source.pathname === '/push-sw.js') {
       // Fetch the main.js file from the CDN
       return fetch('https://cdn.autopush.in/scripts/sw.js');
@@ -18,18 +18,21 @@ export default {
     // Fetch the original Blogger content
     let originalResponse = await fetch(source.toString());
 
-    // Clone the response to modify its body, while keeping headers intact
-    let responseClone = originalResponse.clone();
-    let content = await responseClone.text();
+    // Get the content from the original response
+    let content = await originalResponse.text();
 
-    // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'run.fastrojgar.com');
+    // Replace all occurrences of 'www.fastrojgar.com' with 'hostweb.pages.dev'
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
+
+    // Create a new response without the Speculation-Rules header
+    let responseHeaders = new Headers(originalResponse.headers);
+    responseHeaders.delete('Speculation-Rules'); // Remove Speculation-Rules header
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
       status: originalResponse.status,
       statusText: originalResponse.statusText,
-      headers: originalResponse.headers // Preserve original headers
+      headers: responseHeaders // Use modified headers
     });
   },
 };
