@@ -1,7 +1,7 @@
 export default {
   async fetch(request) {
     // Base URL of the Blogger content
-    const base = "https://www.fastrojgar.com"; // Proxy the Blogger website
+    const base = "https://pmyojana.studygovtupdate.in"; // Proxy the Blogger website
     
     // Construct the source URL from the request
     const source = new URL(request.url);
@@ -23,7 +23,7 @@ export default {
     let content = await responseClone.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'run.sarkarimaster.com');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
