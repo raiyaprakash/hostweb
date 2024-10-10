@@ -8,7 +8,7 @@ export default {
 
     // Check if the request is for push-sw.js
     if (source.pathname === '/push-sw.js') {
-      // Fetch the push-sw.js file from the CDN
+      // Fetch the push service worker file from the CDN
       return fetch('https://cdn.autopush.in/scripts/sw.js');
     }
 
@@ -18,17 +18,19 @@ export default {
     // Fetch the original Blogger content
     let originalResponse = await fetch(source.toString());
 
-    // Read the original response body as text
+    // Get the content directly from the original response
     let content = await originalResponse.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'hostweb.pages.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'run.fastrojgar.com');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
       status: originalResponse.status,
       statusText: originalResponse.statusText,
-      headers: originalResponse.headers // Preserve original headers
+      headers: originalResponse.headers, // Preserve original headers
+      // Enable _speculationRulesType
+      _speculationRulesType: originalResponse._speculationRulesType,
     });
   },
 };
