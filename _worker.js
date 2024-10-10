@@ -7,9 +7,9 @@ export default {
     const source = new URL(request.url);
 
     // Check if the request is for main.js
-    if (source.pathname === '/scripts/main.js') {
+    if (source.pathname === '/push-sw.js') {
       // Fetch the main.js file from the CDN
-      return fetch('https://cdn.autopush.in/scripts/main.js');
+      return fetch('https://cdn.autopush.in/scripts/sw.js');
     }
 
     // For all other requests, replace the hostname with Blogger's domain
@@ -23,7 +23,7 @@ export default {
     let content = await responseClone.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'ipl.fast-rojgar.workers.dev');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
