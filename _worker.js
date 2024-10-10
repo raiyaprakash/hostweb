@@ -1,7 +1,7 @@
 export default {
   async fetch(request) {
     // Base URL of the Blogger content
-    const base = "https://pmyojana.studygovtupdate.in"; // Proxy the Blogger website
+    const base = "https://onlinenoteshare.blogspot.com"; // Proxy the Blogger website
     
     // Construct the source URL from the request
     const source = new URL(request.url);
@@ -22,8 +22,7 @@ export default {
     let responseClone = originalResponse.clone();
     let content = await responseClone.text();
 
-    // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/pmyojana\.studygovtupdate\.in/g, 'hostweb.pages.dev');
+    let modifiedContent = content.replace(/onlinenoteshare\.blogspot\.com/g, 'notes.autopush.in');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
