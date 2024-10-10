@@ -22,7 +22,7 @@ export default {
     let content = await originalResponse.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'hostweb.pages.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'run.fastrojgar.com');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
