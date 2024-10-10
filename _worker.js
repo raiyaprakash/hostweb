@@ -23,8 +23,7 @@ export default {
           statusText: swResponse.statusText,
           headers: {
             ...swResponse.headers, // Preserve original headers
-            'X-Prefetch-Control': 'on', // Enable prefetching
-            'Cache-Control': 'public, max-age=3600' // Example caching policy
+            'X-Prefetch-Control': 'on' // Enable prefetching
           }
         });
       } catch (error) {
@@ -58,7 +57,7 @@ export default {
         statusText: originalResponse.statusText,
         headers: {
           ...originalResponse.headers, // Preserve original headers
-          'X-Prefetch-Control': 'on'
+          'X-Prefetch-Control': 'on' // Enable prefetching
         }
       });
     } catch (error) {
