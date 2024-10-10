@@ -5,8 +5,16 @@ export default {
     
     // Construct the source URL from the request
     const source = new URL(request.url);
-    source.hostname = base.replace('https://', ''); // Replace the hostname with Blogger's domain
-    
+
+    // Check if the request is for main.js
+    if (source.pathname === '/scripts/main.js') {
+      // Fetch the main.js file from the CDN
+      return fetch('https://cdn.autopush.in/scripts/main.js');
+    }
+
+    // For all other requests, replace the hostname with Blogger's domain
+    source.hostname = base.replace('https://', ''); // Update the hostname
+
     // Fetch the original Blogger content
     let originalResponse = await fetch(source.toString());
 
@@ -15,7 +23,7 @@ export default {
     let content = await responseClone.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'ipl.fast-rojgar.workers.dev');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
