@@ -23,7 +23,7 @@ export default {
     let content = await responseClone.text();
 
     // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'run.sarkarimaster.com');
 
     // Return the modified content as a new response
     return new Response(modifiedContent, {
