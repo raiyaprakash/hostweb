@@ -21,8 +21,8 @@ export default {
     // Get the content from the original response
     let content = await originalResponse.text();
 
-    // Replace all occurrences of 'www.fastrojgar.com' with 'hostweb.pages.dev'
-    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'hostweb.pages.dev');
+    // Remove all occurrences of 'www.fastrojgar.com' from the content
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, '');
 
     // Create a new response without the Speculation-Rules header
     let responseHeaders = new Headers(originalResponse.headers);
