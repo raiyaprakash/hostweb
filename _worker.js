@@ -1,10 +1,27 @@
 export default {
-  fetch(request) {
-    const base = "https://example.com";
-    const statusCode = 301;
-
+  async fetch(request) {
+    // Base URL of the Blogger content
+    const base = "https://www.fastrojgar.com"; // Proxy the Blogger website
+    
+    // Construct the source URL from the request
     const source = new URL(request.url);
-    const destination = new URL(source.pathname, base);
-    return Response.redirect(destination.toString(), statusCode);
+    source.hostname = base.replace('https://', ''); // Replace the hostname with Blogger's domain
+    
+    // Fetch the original Blogger content
+    let originalResponse = await fetch(source.toString());
+
+    // Clone the response to modify its body, while keeping headers intact
+    let responseClone = originalResponse.clone();
+    let content = await responseClone.text();
+
+    // Replace all occurrences of 'www.fastrojgar.com' with 'ipl.fast-rojgar.workers.dev'
+    let modifiedContent = content.replace(/www\.fastrojgar\.com/g, 'ipl.fast-rojgar.workers.dev');
+
+    // Return the modified content as a new response
+    return new Response(modifiedContent, {
+      status: originalResponse.status,
+      statusText: originalResponse.statusText,
+      headers: originalResponse.headers // Preserve original headers
+    });
   },
 };
