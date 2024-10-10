@@ -24,7 +24,7 @@ export default {
     // Remove all occurrences of 'www.fastrojgar.com' from the content
     let modifiedContent = content.replace(/www\.fastrojgar\.com/g, '');
 
-    // Create a new response without the Speculation-Rules header
+    // Create a new response and remove the Speculation-Rules header if it exists
     let responseHeaders = new Headers(originalResponse.headers);
     responseHeaders.delete('Speculation-Rules'); // Remove Speculation-Rules header
 
