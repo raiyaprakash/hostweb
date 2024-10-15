@@ -1,54 +1,58 @@
 export default {
   async fetch(request) {
-    const cache = caches.default; // Access Cloudflare's default cache
-    const cacheKey = new Request(request.url, request); // Cache key based on the request
+    const cache = caches.default; // Access Cloudflare's cache
+    const cacheKey = new Request(request.url, request); // Create cache key based on request
 
     const url = new URL(request.url);
-    const isClearCache = url.searchParams.get('clr') === 'cache'; // Check for cache clearing
+    const isClearCache = url.searchParams.get('clr') === 'cache'; // Check for ?clr=cache
 
-    const base = "https://www.updatemarts.com"; // Blogger site URL
+    const base = "https://www.updatemarts.com"; // Blogger URL
     const source = new URL(request.url);
 
-    // If the request is for the service worker file, fetch it from the CDN.
+    // Handle service worker file requests.
     if (source.pathname === '/push-sw.js') {
       return fetch('https://cdn.autopush.in/scripts/sw.js');
     }
 
-    // Clear the cache if '?clr=cache' is present.
+    // Clear cache if ?clr=cache is present.
     if (isClearCache) {
       await cache.delete(cacheKey);
       return new Response('Cache cleared.', { status: 200 });
     }
 
-    // Check if the response is already in the cache.
+    // Check for cached response.
     let cachedResponse = await cache.match(cacheKey);
     if (cachedResponse) {
       console.log('Cache hit');
       return cachedResponse; // Return cached response.
     }
 
-    console.log('Cache miss, fetching new content');
-    source.hostname = base.replace('https://', ''); // Set the hostname to Blogger's.
+    console.log('Cache miss, fetching content from origin');
+    source.hostname = base.replace('https://', ''); // Update to Blogger hostname
 
-    // Fetch the original content from Blogger.
+    // Fetch from the origin with cache options.
     const fetchOptions = { cf: { cacheEverything: true, cacheTtl: 3600 } };
     let originalResponse = await fetch(source.toString(), fetchOptions);
 
-    // Only cache responses with status 200.
+    // Only cache if response status is 200.
     if (originalResponse.status !== 200) {
-      return originalResponse;
+      return originalResponse; // Return as-is without caching.
     }
 
-    // Modify the content without altering headers.
-    let content = await originalResponse.text();
-    let modifiedContent = content.replace(/www\.updatemarts\.com/g, 'notes.autopush.in');
+    // Clone the original response and modify its content.
+    let originalText = await originalResponse.text();
+    let modifiedContent = originalText.replace(/www\.updatemarts\.com/g, 'notes.autopush.in');
 
-    // Create a new response with the same headers and modified content.
-    let response = new Response(modifiedContent, originalResponse);
+    // Create a new response with the exact same headers.
+    let response = new Response(modifiedContent, {
+      status: originalResponse.status,
+      statusText: originalResponse.statusText,
+      headers: originalResponse.headers, // Clone original headers exactly.
+    });
 
-    // Cache the response for future requests.
+    // Store the new response in cache.
     await cache.put(cacheKey, response.clone());
 
-    return response;
+    return response; // Return the new cached response.
   },
 };
