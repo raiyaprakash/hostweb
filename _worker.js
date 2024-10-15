@@ -1,34 +1,53 @@
 export default {
   async fetch(request) {
-    // Base URL of the Blogger content
-    const base = "https://onlinenoteshare.blogspot.com"; // Proxy the Blogger website
-    
-    // Construct the source URL from the request
+    const cache = caches.default; // Cloudflare Workers cache
+    const cacheKey = new Request(request.url, request); // Create a cache key
+
+    const url = new URL(request.url);
+    const isClearCache = url.searchParams.get('clr') === 'cache'; // Check if cache needs to be cleared
+
+    const base = "https://www.updatemarts.com"; // Blogger site URL
     const source = new URL(request.url);
 
-    // Check if the request is for main.js
+    // If the request is for 'push-sw.js', fetch it directly from CDN.
     if (source.pathname === '/push-sw.js') {
-      // Fetch the main.js file from the CDN
       return fetch('https://cdn.autopush.in/scripts/sw.js');
     }
 
-    // For all other requests, replace the hostname with Blogger's domain
-    source.hostname = base.replace('https://', ''); // Update the hostname
+    // Clear the cache if '?clr=cache' is in the query.
+    if (isClearCache) {
+      await cache.delete(cacheKey);
+      return new Response('Cache cleared.', { status: 200 });
+    }
 
-    // Fetch the original Blogger content
+    // Try fetching from the cache first.
+    let response = await cache.match(cacheKey);
+    if (response) {
+      console.log('Cache hit');
+      return response; // Return cached response if available.
+    }
+
+    console.log('Cache miss, fetching new content');
+    source.hostname = base.replace('https://', ''); // Update to Blogger's domain.
+
+    // Fetch the original Blogger content.
     let originalResponse = await fetch(source.toString());
 
-    // Clone the response to modify its body, while keeping headers intact
+    // Clone and modify the response.
     let responseClone = originalResponse.clone();
     let content = await responseClone.text();
+    let modifiedContent = content.replace(/www\.updatemarts\.com/g, 'notes.autopush.in');
 
-    let modifiedContent = content.replace(/onlinenoteshare\.blogspot\.com/g, 'notes.autopush.in');
-
-    // Return the modified content as a new response
-    return new Response(modifiedContent, {
+    // Create a new Response with modified content.
+    response = new Response(modifiedContent, {
       status: originalResponse.status,
       statusText: originalResponse.statusText,
-      headers: originalResponse.headers // Preserve original headers
+      headers: originalResponse.headers, // Preserve headers.
     });
+
+    // Store the modified response in cache for future requests.
+    await cache.put(cacheKey, response.clone());
+
+    return response;
   },
 };
