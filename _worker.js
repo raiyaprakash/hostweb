@@ -16,67 +16,49 @@ export default {
     // Check if the request matches any of the patterns
     const matchedPattern = Object.keys(patterns).find((key) => patterns[key](source));
 
-    // Fetch `push-sw.js` directly from the CDN
-    if (source.pathname === "/push-sw.js") {
-      return fetch("https://cdn.autopush.in/scripts/sw.js");
+    // Fetch push-sw.js directly from the CDN
+    if (source.pathname === '/push-sw.js') {
+      return fetch('https://cdn.autopush.in/scripts/sw.js');
     }
 
     // Replace hostname for Blogger
-    source.hostname = base.replace("https://", "");
+    source.hostname = base.replace('https://', '');
 
-    // SQL Key for caching
-    const sqlKey = matchedPattern ? `${matchedPattern}:${source.toString()}` : null;
+    // KV Key for caching
+    const kvKey = matchedPattern ? `${matchedPattern}:${source.toString()}` : null;
 
-    if (sqlKey) {
-      // Check SQL database for cached response
-      const query = `SELECT body, status, headers, expiration FROM blog_cache WHERE key = ?`;
-      const result = await env.D1.prepare(query).bind(sqlKey).first();
-
-      // If a cached response exists and is valid, return it
-      if (result && Date.now() < result.expiration) {
-        return new Response(result.body, {
-          status: result.status,
-          headers: JSON.parse(result.headers),
-        });
+    if (kvKey) {
+      // Check KV for cached content
+      const cachedContent = await env.BLOG_CACHE.get(kvKey);
+      if (cachedContent) {
+        // Serve cached content with default headers
+        return new Response(cachedContent, { headers: { 'Content-Type': 'text/html' } });
       }
     }
 
     // Fetch the original content
     const originalResponse = await fetch(source.toString());
+    const contentType = originalResponse.headers.get('Content-Type');
+
+    // Clone the response body for modification
     const content = await originalResponse.text();
 
     // Modify the content
-    const modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, "notes.autopush.in");
+    const modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, 'notes.autopush.in');
 
-    if (sqlKey) {
-      // Prepare data for caching
-      const headers = {};
-      originalResponse.headers.forEach((value, key) => {
-        headers[key] = value;
+    if (kvKey && contentType.includes("text/html")) {
+      // Save only the modified content in KV
+      await env.BLOG_CACHE.put(kvKey, modifiedContent, {
+        expirationTtl: 86400, // Cache for 24 hours
       });
-
-      const expiration = Date.now() + 86400 * 1000; // Cache for 24 hours
-
-      // Insert or update cache in SQL database
-      const upsertQuery = `
-        INSERT INTO blog_cache (key, body, status, headers, expiration)
-        VALUES (?, ?, ?, ?, ?)
-        ON CONFLICT(key) DO UPDATE SET
-          body = excluded.body,
-          status = excluded.status,
-          headers = excluded.headers,
-          expiration = excluded.expiration
-      `;
-
-      await env.D1.prepare(upsertQuery)
-        .bind(sqlKey, modifiedContent, originalResponse.status, JSON.stringify(headers), expiration)
-        .run();
     }
 
-    // Return the modified content
+    // Serve the modified content with original headers
     return new Response(modifiedContent, {
       status: originalResponse.status,
-      headers: originalResponse.headers,
+      headers: {
+        'Content-Type': contentType, // Serve content type from the original response
+      },
     });
   },
 };
