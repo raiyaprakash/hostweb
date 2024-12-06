@@ -59,7 +59,7 @@ export default {
       if (originalResponse.status === 200) {
         // Clone the response to modify it and store it in KV
         let content = await originalResponse.text();
-        let modifiedContent = content.replace(/fastrojgar-in\.blogspot\.com/g, 'notes.autopush.in');
+        let modifiedContent = content.replace(/fastrojgar-in\.blogspot\.com/g, 'www.fastrojgar.in');
 
         // Save the modified response in KV with only the Content-Type header
         const kvPayload = {
