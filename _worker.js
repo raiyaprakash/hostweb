@@ -17,12 +17,12 @@ export default {
 
     // List of patterns for specific pages to cache
     const cachePatterns = [
-      '/',             // Cache homepage
-      /\.html$/,       // Cache .html pages
-      '/feed',         // Cache feed URLs
-      '/label',        // Cache label URLs
-      '/sitemap',      // Cache sitemap URLs
-      /\.txt$/         // Cache .txt files
+      '/',              // Cache homepage
+      /\.html$/,        // Cache .html pages
+      /feed/,           // Match any URL containing "feed"
+      /label/,          // Match any URL containing "label"
+      /sitemap/,        // Match any URL containing "sitemap"
+      /\.txt$/          // Cache .txt files
     ];
 
     // Check if the current URL matches any of the cache patterns
@@ -55,27 +55,33 @@ export default {
       // If not cached, fetch the original content
       let originalResponse = await fetch(source.toString());
 
-      // Clone the response to modify it and store it in KV
-      let content = await originalResponse.text();
-      let modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, 'notes.autopush.in');
+      // Check if the response status is 200 OK
+      if (originalResponse.status === 200) {
+        // Clone the response to modify it and store it in KV
+        let content = await originalResponse.text();
+        let modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, 'notes.autopush.in');
 
-      // Save the modified response in KV with only the Content-Type header
-      const kvPayload = {
-        body: modifiedContent,
-        status: originalResponse.status,
-        headers: {
-          'Content-Type': originalResponse.headers.get('Content-Type') || 'text/html', // Default to 'text/html' if missing
-        },
-      };
+        // Save the modified response in KV with only the Content-Type header
+        const kvPayload = {
+          body: modifiedContent,
+          status: originalResponse.status,
+          headers: {
+            'Content-Type': originalResponse.headers.get('Content-Type') || 'text/html', // Default to 'text/html' if missing
+          },
+        };
 
-      // Store the cached content in KV without expiration time
-      await env.BLOG_CACHE.put(kvKey, JSON.stringify(kvPayload));
+        // Store the cached content in KV without expiration time
+        await env.BLOG_CACHE.put(kvKey, JSON.stringify(kvPayload));
 
-      // Return the modified response
-      return new Response(modifiedContent, {
-        status: originalResponse.status,
-        headers: kvPayload.headers, // Return only the modified headers
-      });
+        // Return the modified response
+        return new Response(modifiedContent, {
+          status: originalResponse.status,
+          headers: kvPayload.headers, // Return only the modified headers
+        });
+      } else {
+        // If the response is not 200 OK, return it as-is without caching
+        return originalResponse;
+      }
     } else {
       // If the URL doesn't match, just fetch and return it without caching
       return fetch(source.toString());
