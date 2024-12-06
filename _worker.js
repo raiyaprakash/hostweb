@@ -43,10 +43,12 @@ export default {
       let cachedResponse = await env.BLOG_CACHE.get(kvKey, { type: 'json' });
 
       if (cachedResponse) {
-        // Reconstruct the cached response
+        // Reconstruct the cached response with the Content-Type header
         return new Response(cachedResponse.body, {
           status: cachedResponse.status,
-          headers: cachedResponse.headers,
+          headers: {
+            'Content-Type': cachedResponse.headers['Content-Type'], // Only save the Content-Type
+          },
         });
       }
 
@@ -57,24 +59,22 @@ export default {
       let content = await originalResponse.text();
       let modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, 'notes.autopush.in');
 
-      // Save the modified response in KV with headers
+      // Save the modified response in KV with only the Content-Type header
       const kvPayload = {
         body: modifiedContent,
         status: originalResponse.status,
-        headers: [...originalResponse.headers].reduce((acc, [key, value]) => {
-          acc[key] = value;
-          return acc;
-        }, {}),
+        headers: {
+          'Content-Type': originalResponse.headers.get('Content-Type') || 'text/html', // Default to 'text/html' if missing
+        },
       };
 
-      await env.BLOG_CACHE.put(kvKey, JSON.stringify(kvPayload), {
-        expirationTtl: 86400, // Cache for 24 hours
-      });
+      // Store the cached content in KV without expiration time
+      await env.BLOG_CACHE.put(kvKey, JSON.stringify(kvPayload));
 
       // Return the modified response
       return new Response(modifiedContent, {
         status: originalResponse.status,
-        headers: originalResponse.headers,
+        headers: kvPayload.headers, // Return only the modified headers
       });
     } else {
       // If the URL doesn't match, just fetch and return it without caching
