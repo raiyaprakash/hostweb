@@ -1,7 +1,7 @@
 export default {
   async fetch(request, env) {
     // Base URL of the Blogger content
-    const base = "https://fastrojgar2220.blogspot.com";
+    const base = "https://fastrojgar-in.blogspot.com";
 
     // Construct the source URL from the request
     const source = new URL(request.url);
@@ -59,7 +59,7 @@ export default {
       if (originalResponse.status === 200) {
         // Clone the response to modify it and store it in KV
         let content = await originalResponse.text();
-        let modifiedContent = content.replace(/fastrojgar2220\.blogspot\.com/g, 'notes.autopush.in');
+        let modifiedContent = content.replace(/fastrojgar-in\.blogspot\.com/g, 'notes.autopush.in');
 
         // Save the modified response in KV with only the Content-Type header
         const kvPayload = {
